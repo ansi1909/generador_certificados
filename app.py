@@ -13,7 +13,7 @@ st.title(title)
 # Función que genera un certificado a partir de un nombre y una plantilla
 # Sustituye el marcador {{NOMBRE}} por el nombre real del participante
 def generate_certificate(name, template_bytes):
-    template_pptx = Presentation(template_bytes)  # Carga la plantilla PPTX desde los bytes
+    template_pptx = Presentation(BytesIO(template_bytes))  # Carga la plantilla PPTX desde los bytes
     output = BytesIO()  # Buffer para guardar el resultado
     prs = Presentation()  # Nueva presentación vacía donde se insertará el certificado
 
@@ -58,11 +58,14 @@ if uploaded_template and uploaded_excel:
     if st.button("✅ Generar certificados"):
         zip_buffer = BytesIO()  # Buffer para crear el archivo ZIP final
 
+        # Leemos el contenido de la plantilla una sola vez y lo reutilizamos
+        template_bytes = uploaded_template.read()
+
         # Crea un archivo ZIP en memoria
         with zipfile.ZipFile(zip_buffer, 'w') as zipf:
             for name in df[nombre_columna]:
                 # Genera el certificado individual
-                cert = generate_certificate(name, uploaded_template.read())
+                cert = generate_certificate(name, template_bytes)
 
                 # Asigna un nombre de archivo amigable
                 filename = f"Certificado_{name.replace(' ', '_')}.pptx"
