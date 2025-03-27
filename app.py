@@ -13,7 +13,7 @@ st.title(title)
 # Función que genera un certificado a partir de un nombre y una plantilla
 # Sustituye el marcador {{NOMBRE}} por el nombre real del participante
 def generate_certificate(name, template_bytes):
-    template_pptx = Presentation(BytesIO(template_bytes))  # Carga la plantilla PPTX desde los bytes
+    template_pptx = Presentation(BytesIO(template_bytes))  # Asegura que los bytes sean tratados como archivo
     output = BytesIO()  # Buffer para guardar el resultado
     prs = Presentation()  # Nueva presentación vacía donde se insertará el certificado
 
