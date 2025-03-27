@@ -11,32 +11,23 @@ st.set_page_config(page_title=title, layout="centered")
 st.title(title)
 
 # Función que genera un certificado a partir de un nombre y una plantilla
-# Sustituye el marcador {{NOMBRE}} por el nombre real del participante
+# Sustituye el marcador {{NOMBRE}} directamente en la diapositiva original
+
 def generate_certificate(name, template_bytes):
-    template_pptx = Presentation(BytesIO(template_bytes))  # Asegura que los bytes sean tratados como archivo
-    output = BytesIO()  # Buffer para guardar el resultado
-    prs = Presentation()  # Nueva presentación vacía donde se insertará el certificado
+    prs = Presentation(BytesIO(template_bytes))  # Carga la presentación desde los bytes
+    output = BytesIO()
 
-    # Itera sobre las diapositivas de la plantilla original
-    for slide in template_pptx.slides:
-        slide_copy = prs.slides.add_slide(prs.slide_layouts[5])  # Crea una nueva diapositiva vacía
-
-        # Recorre las formas de la diapositiva original
+    # Recorre cada diapositiva y reemplaza el texto que contenga {{NOMBRE}}
+    for slide in prs.slides:
         for shape in slide.shapes:
             if shape.has_text_frame:
-                text = shape.text_frame.text
-                # Reemplaza el marcador con el nombre real
-                new_text = text.replace("{{NOMBRE}}", name)
+                for paragraph in shape.text_frame.paragraphs:
+                    for run in paragraph.runs:
+                        if "{{NOMBRE}}" in run.text:
+                            run.text = run.text.replace("{{NOMBRE}}", name)
 
-                # Crea una nueva caja de texto en la diapositiva copiada
-                new_shape = slide_copy.shapes.add_textbox(
-                    shape.left, shape.top, shape.width, shape.height
-                )
-                new_frame = new_shape.text_frame
-                new_frame.text = new_text
-
-    prs.save(output)  # Guarda la presentación en el buffer
-    output.seek(0)  # Vuelve al inicio del buffer para lectura
+    prs.save(output)
+    output.seek(0)
     return output
 
 # Carga de archivos: plantilla PowerPoint y archivo Excel
