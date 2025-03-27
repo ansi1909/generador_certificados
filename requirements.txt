@@ -1,1 +1,4 @@
-streamlit\npandas\npython-pptx\nopenpyxl
+streamlit
+pandas
+python-pptx
+openpyxl
