@@ -4,6 +4,9 @@ from pptx import Presentation
 from pptx.util import Pt
 from io import BytesIO
 import zipfile
+import os
+import subprocess
+import tempfile
 
 # Configuración inicial de la app de Streamlit
 title = "🎓 Generador de Certificados"
@@ -30,6 +33,23 @@ def generate_certificate(name, template_bytes):
     output.seek(0)
     return output
 
+# Función para convertir PPT a PDF usando LbreOffice
+def convert_to_pdf(pptx_bytes, output_filename):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        pptx_path = os.path.join(tmpdir, "temp_cert.pptx")
+        pdf_dir = tmpdir
+
+        with open(pptx_path, "wb") as f:
+            f.write(pptx_bytes.read())
+
+        subprocess.run([
+            "soffice", "--headless", "--convert-to", "pdf", pptx_path, "--outdir", pdf_dir
+        ], check=True )
+
+        pdf_path = pptx_path.replace(".pptx", ".pdf")
+        with open(pdf_path, "rb") as f:
+            return f.read()
+        
 # Carga de archivos: plantilla PowerPoint y archivo Excel
 uploaded_template = st.file_uploader(
     "Sube la plantilla PowerPoint (.pptx) con {{NOMBRE}}", type="pptx"
@@ -37,6 +57,9 @@ uploaded_template = st.file_uploader(
 uploaded_excel = st.file_uploader(
     "Sube el archivo Excel con los participantes", type="xlsx"
 )
+
+# Selección de formato de salida
+output_format = st.selectbox("Selecciona el formato de salida", ['PPTX', 'PDF'])
 
 # Verifica que ambos archivos hayan sido subidos
 if uploaded_template and uploaded_excel:
@@ -59,11 +82,14 @@ if uploaded_template and uploaded_excel:
                 cert = generate_certificate(name, template_bytes)
 
                 # Asigna un nombre de archivo amigable
-                filename = f"Certificado_{name.replace(' ', '_')}.pptx"
+                filename = f"Certificado_{name.replace(' ', '_')}"
 
-                # Añade el certificado al ZIP
-                zipf.writestr(filename, cert.read())
-
+                if output_format == "PDF":
+                    pdf_content = convert_to_pdf(cert, filename_base + ".pdf")
+                    zipf.writestr(filename_base + ".pdf", pdf_content)
+                else:
+                    zipf.writestr(filename_base + ".pptx", cert.read())
+            
         zip_buffer.seek(0)  # Prepara el buffer para descarga
 
         st.success("✨ Certificados generados correctamente")
