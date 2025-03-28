@@ -82,7 +82,7 @@ if uploaded_template and uploaded_excel:
                 cert = generate_certificate(name, template_bytes)
 
                 # Asigna un nombre de archivo amigable
-                filename = f"Certificado_{name.replace(' ', '_')}"
+                filename_base = f"Certificado_{name.replace(' ', '_')}"
 
                 if output_format == "PDF":
                     pdf_content = convert_to_pdf(cert, filename_base + ".pdf")
